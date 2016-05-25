@@ -508,6 +508,8 @@ func Issues(opts *IssuesOptions) ([]*Issue, error) {
 
 	if opts.RepoID > 0 {
 		sess.Where("issue.repo_id=?", opts.RepoID).And("issue.is_closed=?", opts.IsClosed)
+	} else if opts.RepoID == 0 {
+		sess.Where("issue.is_closed=?", opts.IsClosed)
 	} else if opts.RepoIDs != nil {
 		// In case repository IDs are provided but actually no repository has issue.
 		if len(opts.RepoIDs) == 0 {
@@ -847,8 +849,12 @@ func GetUserIssueStats(repoID, uid int64, repoIDs []int64, filterMode int, isPul
 
 	queryStr := "SELECT COUNT(*) FROM `issue` "
 	baseCond := " WHERE issue.is_closed=?"
-	if repoID > 0 || len(repoIDs) == 0 {
-		baseCond += " AND issue.repo_id=" + com.ToStr(repoID)
+	// if repoID > 0 || len(repoIDs) == 0 {
+	// baseCond += " AND issue.repo_id=" + com.ToStr(repoID)
+	if len(repoIDs) == 0 {
+		if repoID > 0 {
+			baseCond += " AND issue.repo_id=" + com.ToStr(repoID)
+		}
 	} else {
 		baseCond += " AND issue.repo_id IN (" + strings.Join(base.Int64sToStrings(repoIDs), ",") + ")"
 	}
